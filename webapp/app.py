@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, get_flashed_messages, jsonify
 import yaml
 import os
+from integrations.instagram.instagram_api import test_instagram_connection as instagram_test_conn
+from integrations.twitter.twitter_api import test_twitter_connection as twitter_test_conn # Importa funzione test twitter
 
 app = Flask(__name__)
-app.secret_key = "super segreto" # Chiave segreta per usare Flask flash (messaggi di feedback)
+app.secret_key = "super segreto"
 CONFIG_FILE_PATH = os.path.join('..', 'config', 'config.yaml')
 
 def load_config():
@@ -24,10 +26,10 @@ def save_config(config_data):
 def config_page():
     config = load_config()
     instagram_config = config.get('instagram', {})
-    twitter_config = config.get('twitter', {}) # Carica anche config Twitter
+    twitter_config = config.get('twitter', {})
 
     if request.method == 'POST':
-        form_type = request.form.get('form_type') # Determina quale form è stato inviato
+        form_type = request.form.get('form_type')
 
         if form_type == 'instagram':
             instagram_config['app_id'] = request.form.get('instagram_app_id')
@@ -35,7 +37,7 @@ def config_page():
             instagram_config['page_access_token'] = request.form.get('instagram_page_access_token')
             instagram_config['instagram_business_account_id'] = request.form.get('instagram_business_account_id')
             config['instagram'] = instagram_config
-            flash('Configurazione Instagram salvata con successo!', 'success') # Messaggio di successo
+            flash('Configurazione Instagram salvata con successo!', 'success')
 
         elif form_type == 'twitter':
             twitter_config['twitter_api_key'] = request.form.get('twitter_api_key')
@@ -43,21 +45,32 @@ def config_page():
             twitter_config['twitter_access_token'] = request.form.get('twitter_access_token')
             twitter_config['twitter_access_token_secret'] = request.form.get('twitter_access_token_secret')
             config['twitter'] = twitter_config
-            flash('Configurazione Twitter salvata con successo!', 'success') # Messaggio di successo
+            flash('Configurazione Twitter salvata con successo!', 'success')
         
         save_config(config)
-        return redirect(url_for('config_page')) # Ricarica per mostrare messaggi e valori salvati
+        return redirect(url_for('config_page'))
 
-    # Passa sia instagram_config che twitter_config al template
-    return render_template('config.html', instagram_config=instagram_config, twitter_config=twitter_config, messages=flash_messages())
+    return render_template('config.html', instagram_config=instagram_config, twitter_config=twitter_config, messages=get_flashed_messages(with_categories=True))
 
-def flash_messages():
-    """Recupera e formatta i messaggi flash di Flask per passarli al template."""
-    messages = flash()
-    formatted_messages = []
-    for message, category in messages:
-        formatted_messages.append({'message': message, 'category': category})
-    return formatted_messages
+
+@app.route('/test_instagram_connection', methods=['POST'])
+def test_instagram_connection_route():
+    config_data = request.get_json()
+    success, result = instagram_test_conn(config_data) # Chiama funzione test da integrations/instagram/instagram_api.py
+    if success:
+        return jsonify({'success': True, 'username': result.get('username'), 'biography': result.get('biography'), 'followers_count': result.get('followers_count'), 'follows_count': result.get('follows_count')}), 200
+    else:
+        return jsonify({'success': False, 'error': result}), 400  # Restituisce errore 400 e messaggio
+
+
+@app.route('/test_twitter_connection', methods=['POST'])
+def test_twitter_connection_route():
+    config_data = request.get_json()
+    success, result_message = twitter_test_conn(config_data) # Chiama funzione test da integrations/twitter/twitter_api.py
+    if success:
+        return jsonify({'success': True, 'username': result_message}), 200 # Restituisce username se successo
+    else:
+        return jsonify({'success': False, 'error': result_message}), 400 # Restituisce errore 400 e messaggio
 
 
 if __name__ == '__main__':

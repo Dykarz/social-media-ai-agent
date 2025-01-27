@@ -37,15 +37,16 @@
         textarea {
             height: 100px;
         }
-        button[type="submit"] {
+        button[type="submit"], button[id^="test-connection-"] { /* Stile anche per pulsanti "Test Connessione" */
             background-color: #4CAF50;
             color: white;
             padding: 10px 15px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin-right: 10px; /* Spazio tra pulsanti */
         }
-        button[type="submit"]:hover {
+        button[type="submit"]:hover, button[id^="test-connection-"]:hover {
             background-color: #45a049;
         }
         .config-section {
@@ -64,25 +65,47 @@
             color: green;
             margin-top: 5px;
         }
+        .connection-status-success {
+            color: green;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .connection-status-error {
+            color: red;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .hidden {
+            display: none; /* Classe per nascondere elementi */
+        }
     </style>
 </head>
 <body>
     <h1>Configurazione Social Media AI Agent</h1>
 
+    <div id="feedback-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="{{ category }}-message">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+    </div>
+
     <div class="config-section">
         <h2>Configurazione Instagram</h2>
-        <form method="POST" id="instagram-config-form">
+        <form method="POST" id="instagram-config-form" onsubmit="return validateInstagramConfig()">
+            <input type="hidden" name="form_type" value="instagram">
             <div>
                 <label for="instagram_app_id">App ID Facebook:</label><br>
-                <input type="text" id="instagram_app_id" name="instagram_app_id" value="{{ instagram_config.app_id or '' }}">
+                <input type="text" id="instagram_app_id" name="instagram_app_id" value="{{ instagram_config.app_id or '' }}" required> <span class="error-message hidden" id="instagram_app_id_error">Campo obbligatorio</span>
             </div>
             <div>
                 <label for="instagram_app_secret">App Secret Facebook:</label><br>
-                <input type="text" id="instagram_app_secret" name="instagram_app_secret" value="{{ instagram_config.app_secret or '' }}">
+                <input type="text" id="instagram_app_secret" name="instagram_app_secret" value="{{ instagram_config.app_secret or '' }}" required> <span class="error-message hidden" id="instagram_app_secret_error">Campo obbligatorio</span>
             </div>
             <div>
                 <label for="instagram_page_access_token">Page Access Token Instagram:</label><br>
-                <textarea id="instagram_page_access_token" name="instagram_page_access_token">{{ instagram_config.page_access_token or '' }}</textarea>
+                <textarea id="instagram_page_access_token" name="instagram_page_access_token" required>{{ instagram_config.page_access_token or '' }}</textarea> <span class="error-message hidden" id="instagram_page_access_token_error">Campo obbligatorio</span>
             </div>
             <div>
                 <label for="instagram_business_account_id">Instagram Business Account ID (opzionale):</label><br>
@@ -90,36 +113,171 @@
             </div>
             <br>
             <button type="submit">Salva Configurazione Instagram</button>
+            <button type="button" id="test-connection-instagram">Test Connessione Instagram</button> <span id="connection-status-instagram"></span>
         </form>
+        <div id="instagram-connection-result"></div> {# Area per mostrare risultato test connessione Instagram #}
     </div>
 
     <div class="config-section">
         <h2>Configurazione Twitter</h2>
-        <form method="POST" id="twitter-config-form">
+        <form method="POST" id="twitter-config-form" onsubmit="return validateTwitterConfig()">
+            <input type="hidden" name="form_type" value="twitter">
             <div>
                 <label for="twitter_api_key">API Key Twitter:</label><br>
-                <input type="text" id="twitter_api_key" name="twitter_api_key" value="{{ twitter_config.twitter_api_key or '' }}">
+                <input type="text" id="twitter_api_key" name="twitter_api_key" value="{{ twitter_config.twitter_api_key or '' }}" required> <span class="error-message hidden" id="twitter_api_key_error">Campo obbligatorio</span>
             </div>
             <div>
                 <label for="twitter_api_secret_key">API Secret Key Twitter:</label><br>
-                <input type="text" id="twitter_api_secret_key" name="twitter_api_secret_key" value="{{ twitter_config.twitter_api_secret_key or '' }}">
+                <input type="text" id="twitter_api_secret_key" name="twitter_api_secret_key" value="{{ twitter_config.twitter_api_secret_key or '' }}" required> <span class="error-message hidden" id="twitter_api_secret_key_error">Campo obbligatorio</span>
             </div>
             <div>
                 <label for="twitter_access_token">Access Token Twitter:</label><br>
-                <input type="text" id="twitter_access_token" name="twitter_access_token" value="{{ twitter_config.twitter_access_token or '' }}">
+                <input type="text" id="twitter_access_token" name="twitter_access_token" value="{{ twitter_config.twitter_access_token or '' }}" required> <span class="error-message hidden" id="twitter_access_token_error">Campo obbligatorio</span>
             </div>
             <div>
                 <label for="twitter_access_token_secret">Access Token Secret Twitter:</label><br>
-                <textarea id="twitter_access_token_secret" name="twitter_access_token_secret">{{ twitter_config.twitter_access_token_secret or '' }}</textarea>
+                <textarea id="twitter_access_token_secret" name="twitter_access_token_secret" required>{{ twitter_config.twitter_access_token_secret or '' }}</textarea> <span class="error-message hidden" id="twitter_access_token_secret_error">Campo obbligatorio</span>
             </div>
             <br>
             <button type="submit">Salva Configurazione Twitter</button>
+            <button type="button" id="test-connection-twitter">Test Connessione Twitter</button> <span id="connection-status-twitter"></span>
         </form>
+        <div id="twitter-connection-result"></div> {# Area per mostrare risultato test connessione Twitter #}
     </div>
 
-    <div id="feedback-messages">
-        <!-- Qui verranno mostrati messaggi di feedback (successo/errore) -->
-    </div>
+    <script>
+        function validateInstagramConfig() {
+            let isValid = true;
+            const app_id = document.getElementById('instagram_app_id');
+            const app_secret = document.getElementById('instagram_app_secret');
+            const page_access_token = document.getElementById('instagram_page_access_token');
+
+            if (!app_id.value.trim()) {
+                document.getElementById('instagram_app_id_error').classList.remove('hidden');
+                isValid = false;
+            } else {
+                document.getElementById('instagram_app_id_error').classList.add('hidden');
+            }
+            if (!app_secret.value.trim()) {
+                document.getElementById('instagram_app_secret_error').classList.remove('hidden');
+                isValid = false;
+            } else {
+                document.getElementById('instagram_app_secret_error').classList.add('hidden');
+            }
+            if (!page_access_token.value.trim()) {
+                document.getElementById('instagram_page_access_token_error').classList.remove('hidden');
+                isValid = false;
+            } else {
+                document.getElementById('instagram_page_access_token_error').classList.add('hidden');
+            }
+            return isValid;
+        }
+
+        function validateTwitterConfig() {
+            let isValid = true;
+            const api_key = document.getElementById('twitter_api_key');
+            const api_secret_key = document.getElementById('twitter_api_secret_key');
+            const access_token = document.getElementById('twitter_access_token');
+            const access_token_secret = document.getElementById('twitter_access_token_secret');
+
+            if (!api_key.value.trim()) {
+                document.getElementById('twitter_api_key_error').classList.remove('hidden');
+                isValid = false;
+            } else {
+                document.getElementById('twitter_api_key_error').classList.add('hidden');
+            }
+            if (!api_secret_key.value.trim()) {
+                document.getElementById('twitter_api_secret_key_error').classList.remove('hidden');
+                isValid = false;
+            } else {
+                document.getElementById('twitter_api_secret_key_error').classList.add('hidden');
+            }
+            if (!access_token.value.trim()) {
+                document.getElementById('twitter_access_token_error').classList.remove('hidden');
+                isValid = false;
+            } else {
+                document.getElementById('twitter_access_token_error').classList.add('hidden');
+            }
+            if (!access_token_secret.value.trim()) {
+                document.getElementById('twitter_access_token_secret_error').classList.remove('hidden');
+                isValid = false;
+            } else {
+                document.getElementById('twitter_access_token_secret_error').classList.add('hidden');
+            }
+            return isValid;
+        }
+
+        async function testInstagramConnection() {
+            const statusSpan = document.getElementById('connection-status-instagram');
+            const resultDiv = document.getElementById('instagram-connection-result');
+            statusSpan.textContent = "Test in corso...";
+            resultDiv.innerHTML = ""; // Pulisce risultati precedenti
+
+            const app_id = document.getElementById('instagram_app_id').value;
+            const app_secret = document.getElementById('instagram_app_secret').value;
+            const page_access_token = document.getElementById('instagram_page_access_token').value;
+            const instagram_business_account_id = document.getElementById('instagram_business_account_id').value;
+
+            const response = await fetch('/test_instagram_connection', {  // Chiamata API Flask
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    app_id: app_id,
+                    app_secret: app_secret,
+                    page_access_token: page_access_token,
+                    instagram_business_account_id: instagram_business_account_id
+                })
+            });
+
+            statusSpan.textContent = ""; // Pulisce "Test in corso..."
+            const data = await response.json();
+            if (response.ok && data.success) {
+                resultDiv.innerHTML = `<div class="connection-status-success">Connessione a Instagram Riuscita! <br> Username: ${data.username || 'N/A'}, Biografia: ${data.biography || 'N/A'}, Follower: ${data.followers_count || 'N/A'}, Following: ${data.follows_count || 'N/A'}</div>`;
+            } else {
+                resultDiv.innerHTML = `<div class="connection-status-error">Errore di Connessione a Instagram: ${data.error || 'Sconosciuto'}</div>`;
+            }
+        }
+
+        async function testTwitterConnection() {
+            const statusSpan = document.getElementById('connection-status-twitter');
+            const resultDiv = document.getElementById('twitter-connection-result');
+            statusSpan.textContent = "Test in corso...";
+            resultDiv.innerHTML = ""; // Pulisce risultati precedenti
+
+            const api_key = document.getElementById('twitter_api_key').value;
+            const api_secret_key = document.getElementById('twitter_api_secret_key').value;
+            const access_token = document.getElementById('twitter_access_token').value;
+            const access_token_secret = document.getElementById('twitter_access_token_secret').value;
+
+            const response = await fetch('/test_twitter_connection', {  // Chiamata API Flask
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    api_key: api_key,
+                    api_secret_key: api_secret_key,
+                    access_token: access_token,
+                    access_token_secret: access_token_secret
+                })
+            });
+
+            statusSpan.textContent = ""; // Pulisce "Test in corso..."
+            const data = await response.json();
+            if (response.ok && data.success) {
+                resultDiv.innerHTML = `<div class="connection-status-success">Connessione a Twitter Riuscita! Utente: @${data.username}</div>`;
+            } else {
+                resultDiv.innerHTML = `<div class="connection-status-error">Errore di Connessione a Twitter: ${data.error || 'Sconosciuto'}</div>`;
+            }
+        }
+
+
+        document.getElementById('test-connection-instagram').addEventListener('click', testInstagramConnection);
+        document.getElementById('test-connection-twitter').addEventListener('click', testTwitterConnection);
+
+    </script>
 
 </body>
 </html>
