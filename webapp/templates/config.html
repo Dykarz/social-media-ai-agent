@@ -2,28 +2,86 @@
 <html>
 <head>
     <title>Configurazione Social Media AI Agent</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            max-width: 600px;
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box; /* Important to include padding and border in element's total width and height */
+        }
+        textarea {
+            height: 100px; /* Example height for textarea */
+        }
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .config-section {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+        }
+        .config-section:last-child {
+            border-bottom: none; /* No border for the last section */
+        }
+    </style>
 </head>
 <body>
-    <h1>Configurazione Instagram</h1>
-    <form method="POST">
-        <div>
-            <label for="instagram_app_id">App ID Facebook:</label><br>
-            <input type="text" id="instagram_app_id" name="instagram_app_id" value="{{ instagram_config.app_id or '' }}"><br>
-        </div>
-        <div>
-            <label for="instagram_app_secret">App Secret Facebook:</label><br>
-            <input type="text" id="instagram_app_secret" name="instagram_app_secret" value="{{ instagram_config.app_secret or '' }}"><br>
-        </div>
-        <div>
-            <label for="instagram_page_access_token">Page Access Token Instagram:</label><br>
-            <textarea id="instagram_page_access_token" name="instagram_page_access_token">{{ instagram_config.page_access_token or '' }}</textarea><br>
-        </div>
-        <div>
-            <label for="instagram_business_account_id">Instagram Business Account ID (opzionale):</label><br>
-            <input type="text" id="instagram_business_account_id" name="instagram_business_account_id" value="{{ instagram_config.instagram_business_account_id or '' }}"><br>
-        </div>
-        <br>
-        <button type="submit">Salva Configurazione Instagram</button>
-    </form>
+    <h1>Configurazione Social Media AI Agent</h1>
+
+    <div class="config-section">
+        <h2>Configurazione Instagram</h2>
+        <form method="POST">
+            <div>
+                <label for="instagram_app_id">App ID Facebook:</label><br>
+                <input type="text" id="instagram_app_id" name="instagram_app_id" value="{{ instagram_config.app_id or '' }}">
+            </div>
+            <div>
+                <label for="instagram_app_secret">App Secret Facebook:</label><br>
+                <input type="text" id="instagram_app_secret" name="instagram_app_secret" value="{{ instagram_config.app_secret or '' }}">
+            </div>
+            <div>
+                <label for="instagram_page_access_token">Page Access Token Instagram:</label><br>
+                <textarea id="instagram_page_access_token" name="instagram_page_access_token">{{ instagram_config.page_access_token or '' }}</textarea>
+            </div>
+            <div>
+                <label for="instagram_business_account_id">Instagram Business Account ID (opzionale):</label><br>
+                <input type="text" id="instagram_business_account_id" name="instagram_business_account_id" value="{{ instagram_config.instagram_business_account_id or '' }}">
+            </div>
+            <br>
+            <button type="submit">Salva Configurazione Instagram</button>
+        </form>
+    </div>
+
+    <!-- In futuro potremmo aggiungere qui altre sezioni di configurazione (Twitter, etc.) -->
+
 </body>
 </html>
