@@ -10,6 +10,10 @@
         h1 {
             color: #333;
         }
+        h2 {
+            color: #555;
+            margin-top: 20px;
+        }
         form {
             max-width: 600px;
             margin-bottom: 20px;
@@ -28,10 +32,10 @@
             margin-bottom: 10px;
             border: 1px solid #ddd;
             border-radius: 3px;
-            box-sizing: border-box; /* Important to include padding and border in element's total width and height */
+            box-sizing: border-box;
         }
         textarea {
-            height: 100px; /* Example height for textarea */
+            height: 100px;
         }
         button[type="submit"] {
             background-color: #4CAF50;
@@ -50,7 +54,15 @@
             border-bottom: 1px dashed #eee;
         }
         .config-section:last-child {
-            border-bottom: none; /* No border for the last section */
+            border-bottom: none;
+        }
+        .error-message {
+            color: red;
+            margin-top: 5px;
+        }
+        .success-message {
+            color: green;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -59,7 +71,7 @@
 
     <div class="config-section">
         <h2>Configurazione Instagram</h2>
-        <form method="POST">
+        <form method="POST" id="instagram-config-form">
             <div>
                 <label for="instagram_app_id">App ID Facebook:</label><br>
                 <input type="text" id="instagram_app_id" name="instagram_app_id" value="{{ instagram_config.app_id or '' }}">
@@ -81,7 +93,33 @@
         </form>
     </div>
 
-    <!-- In futuro potremmo aggiungere qui altre sezioni di configurazione (Twitter, etc.) -->
+    <div class="config-section">
+        <h2>Configurazione Twitter</h2>
+        <form method="POST" id="twitter-config-form">
+            <div>
+                <label for="twitter_api_key">API Key Twitter:</label><br>
+                <input type="text" id="twitter_api_key" name="twitter_api_key" value="{{ twitter_config.twitter_api_key or '' }}">
+            </div>
+            <div>
+                <label for="twitter_api_secret_key">API Secret Key Twitter:</label><br>
+                <input type="text" id="twitter_api_secret_key" name="twitter_api_secret_key" value="{{ twitter_config.twitter_api_secret_key or '' }}">
+            </div>
+            <div>
+                <label for="twitter_access_token">Access Token Twitter:</label><br>
+                <input type="text" id="twitter_access_token" name="twitter_access_token" value="{{ twitter_config.twitter_access_token or '' }}">
+            </div>
+            <div>
+                <label for="twitter_access_token_secret">Access Token Secret Twitter:</label><br>
+                <textarea id="twitter_access_token_secret" name="twitter_access_token_secret">{{ twitter_config.twitter_access_token_secret or '' }}</textarea>
+            </div>
+            <br>
+            <button type="submit">Salva Configurazione Twitter</button>
+        </form>
+    </div>
+
+    <div id="feedback-messages">
+        <!-- Qui verranno mostrati messaggi di feedback (successo/errore) -->
+    </div>
 
 </body>
 </html>
