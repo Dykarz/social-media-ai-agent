@@ -1,16 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Configurazione Social Media AI Agent</title>
+    <title>Social Media AI Agent</title>
     <style>
+        /* Stili CSS (INLINE - potremmo spostarli in file esterno in futuro) */
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0; /* Rimuovi margin body per sidebar full height */
+            display: flex; /* Usa flexbox per layout sidebar + contenuto */
         }
+
+        /* Sidebar */
+        .sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            height: 100vh; /* Sidebar a tutta altezza viewport */
+            position: fixed; /* Sidebar fissa */
+            left: 0;
+            top: 0;
+            overflow-y: auto; /* Scroll se contenuto sidebar è troppo lungo */
+        }
+
+        .sidebar h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 8px 15px;
+            text-decoration: none;
+            color: #333;
+            border-radius: 5px;
+        }
+
+        .sidebar a:hover {
+            background-color: #ddd;
+        }
+
+        .sidebar a.active {
+            background-color: #5cb85c; /* Verde Bootstrap */
+            color: white;
+        }
+
+
+        /* Contenuto Principale (a destra della sidebar) */
+        .content {
+            flex: 1; /* Prende tutto lo spazio disponibile a destra */
+            padding: 20px;
+            margin-left: 200px; /* Spazio per la sidebar */
+        }
+
+
         h1 {
             color: #333;
         }
-        h2 {
+        h2.config-title { /* Titolo sezione configurazione */
             color: #555;
             margin-top: 20px;
         }
@@ -37,14 +92,14 @@
         textarea {
             height: 100px;
         }
-        button[type="submit"], button[id^="test-connection-"] { /* Stile anche per pulsanti "Test Connessione" */
+        button[type="submit"], button[id^="test-connection-"] {
             background-color: #4CAF50;
             color: white;
             padding: 10px 15px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            margin-right: 10px; /* Spazio tra pulsanti */
+            margin-right: 10px;
         }
         button[type="submit"]:hover, button[id^="test-connection-"]:hover {
             background-color: #45a049;
@@ -76,206 +131,174 @@
             margin-top: 5px;
         }
         .hidden {
-            display: none; /* Classe per nascondere elementi */
+            display: none;
         }
+
+        /* Stili per sezione Profili Social (esempio base) */
+        .profile-section {
+            margin-top: 20px;
+        }
+        .profile-info {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .profile-info h3 {
+            margin-top: 0;
+        }
+        .profile-details p {
+            margin: 5px 0;
+        }
+
+
     </style>
 </head>
 <body>
-    <h1>Configurazione Social Media AI Agent</h1>
 
-    <div id="feedback-messages">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
-                <div class="{{ category }}-message">{{ message }}</div>
-            {% endfor %}
-        {% endwith %}
+    <div class="sidebar">
+        <h2>Menu</h2>
+        <ul>
+            <li><a href="/" class="active">Configurazione</a></li>
+            <li><a href="/profiles">Profili Social</a></li> {# Link a sezione Profili Social #}
+            {# In futuro: <li><a href="/content">Gestione Contenuti</a></li>, <li><a href="/analytics">Analitiche</a></li> #}
+        </ul>
     </div>
 
-    <div class="config-section">
-        <h2>Configurazione Instagram</h2>
-        <form method="POST" id="instagram-config-form" onsubmit="return validateInstagramConfig()">
-            <input type="hidden" name="form_type" value="instagram">
-            <div>
-                <label for="instagram_app_id">App ID Facebook:</label><br>
-                <input type="text" id="instagram_app_id" name="instagram_app_id" value="{{ instagram_config.app_id or '' }}" required> <span class="error-message hidden" id="instagram_app_id_error">Campo obbligatorio</span>
-            </div>
-            <div>
-                <label for="instagram_app_secret">App Secret Facebook:</label><br>
-                <input type="text" id="instagram_app_secret" name="instagram_app_secret" value="{{ instagram_config.app_secret or '' }}" required> <span class="error-message hidden" id="instagram_app_secret_error">Campo obbligatorio</span>
-            </div>
-            <div>
-                <label for="instagram_page_access_token">Page Access Token Instagram:</label><br>
-                <textarea id="instagram_page_access_token" name="instagram_page_access_token" required>{{ instagram_config.page_access_token or '' }}</textarea> <span class="error-message hidden" id="instagram_page_access_token_error">Campo obbligatorio</span>
-            </div>
-            <div>
-                <label for="instagram_business_account_id">Instagram Business Account ID (opzionale):</label><br>
-                <input type="text" id="instagram_business_account_id" name="instagram_business_account_id" value="{{ instagram_config.instagram_business_account_id or '' }}">
-            </div>
-            <br>
-            <button type="submit">Salva Configurazione Instagram</button>
-            <button type="button" id="test-connection-instagram">Test Connessione Instagram</button> <span id="connection-status-instagram"></span>
-        </form>
-        <div id="instagram-connection-result"></div> {# Area per mostrare risultato test connessione Instagram #}
-    </div>
+    <div class="content">
+        <h1>Social Media AI Agent</h1>
 
-    <div class="config-section">
-        <h2>Configurazione Twitter</h2>
-        <form method="POST" id="twitter-config-form" onsubmit="return validateTwitterConfig()">
-            <input type="hidden" name="form_type" value="twitter">
-            <div>
-                <label for="twitter_api_key">API Key Twitter:</label><br>
-                <input type="text" id="twitter_api_key" name="twitter_api_key" value="{{ twitter_config.twitter_api_key or '' }}" required> <span class="error-message hidden" id="twitter_api_key_error">Campo obbligatorio</span>
+        <div id="feedback-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="{{ category }}-message">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+        </div>
+
+        <div id="config-section" class="config-section"> {# ID per identificare sezione config (JS) #}
+            <h2 class="config-title">Configurazione Instagram</h2>
+            <form method="POST" id="instagram-config-form" onsubmit="return validateInstagramConfig()">
+                <input type="hidden" name="form_type" value="instagram">
+                <div>
+                    <label for="instagram_app_id">App ID Facebook:</label><br>
+                    <input type="text" id="instagram_app_id" name="instagram_app_id" value="{{ instagram_config.app_id or '' }}" required> <span class="error-message hidden" id="instagram_app_id_error">Campo obbligatorio</span>
+                </div>
+                <div>
+                    <label for="instagram_app_secret">App Secret Facebook:</label><br>
+                    <input type="text" id="instagram_app_secret" name="instagram_app_secret" value="{{ instagram_config.app_secret or '' }}" required> <span class="error-message hidden" id="instagram_app_secret_error">Campo obbligatorio</span>
+                </div>
+                <div>
+                    <label for="instagram_page_access_token">Page Access Token Instagram:</label><br>
+                    <textarea id="instagram_page_access_token" name="instagram_page_access_token" required>{{ instagram_config.page_access_token or '' }}</textarea> <span class="error-message hidden" id="instagram_page_access_token_error">Campo obbligatorio</span>
+                </div>
+                <div>
+                    <label for="instagram_business_account_id">Instagram Business Account ID (opzionale):</label><br>
+                    <input type="text" id="instagram_business_account_id" name="instagram_business_account_id" value="{{ instagram_config.instagram_business_account_id or '' }}">
+                </div>
+                <br>
+                <button type="submit">Salva Configurazione Instagram</button>
+                <button type="button" id="test-connection-instagram">Test Connessione Instagram</button> <span id="connection-status-instagram"></span>
+            </form>
+            <div id="instagram-connection-result"></div>
+        </div>
+
+        <div id="twitter-config-section" class="config-section"> {# ID per identificare sezione config (JS) #}
+            <h2 class="config-title">Configurazione Twitter</h2>
+            <form method="POST" id="twitter-config-form" onsubmit="return validateTwitterConfig()">
+                <input type="hidden" name="form_type" value="twitter">
+                <div>
+                    <label for="twitter_api_key">API Key Twitter:</label><br>
+                    <input type="text" id="twitter_api_key" name="twitter_api_key" value="{{ twitter_config.twitter_api_key or '' }}" required> <span class="error-message hidden" id="twitter_api_key_error">Campo obbligatorio</span>
+                </div>
+                <div>
+                    <label for="twitter_api_secret_key">API Secret Key Twitter:</label><br>
+                    <input type="text" id="twitter_api_secret_key" name="twitter_api_secret_key" value="{{ twitter_config.twitter_api_secret_key or '' }}" required> <span class="error-message hidden" id="twitter_api_secret_key_error">Campo obbligatorio</span>
+                </div>
+                <div>
+                    <label for="twitter_access_token">Access Token Twitter:</label><br>
+                    <input type="text" id="twitter_access_token" name="twitter_access_token" value="{{ twitter_config.twitter_access_token or '' }}" required> <span class="error-message hidden" id="twitter_access_token_error">Campo obbligatorio</span>
+                </div>
+                <div>
+                    <label for="twitter_access_token_secret">Access Token Secret Twitter:</label><br>
+                    <textarea id="twitter_access_token_secret" name="twitter_access_token_secret" required>{{ twitter_config.twitter_access_token_secret or '' }}</textarea> <span class="error-message hidden" id="twitter_access_token_secret_error">Campo obbligatorio</span>
+                </div>
+                <br>
+                <button type="submit">Salva Configurazione Twitter</button>
+                <button type="button" id="test-connection-twitter">Test Connessione Twitter</button> <span id="connection-status-twitter"></span>
+            </form>
+            <div id="twitter-connection-result"></div>
+        </div>
+
+        <div id="profiles-section" class="profile-section hidden"> {# Sezione Profili Social - inizialmente nascosta #}
+            <h2>Profili Social Collegati</h2>
+            <div id="instagram-profile-info" class="profile-info">
+                <h3>Profilo Instagram</h3>
+                <div id="instagram-profile-details" class="profile-details">
+                    <p><strong>Username:</strong> <span id="instagram-username"></span></p>
+                    <p><strong>Biografia:</strong> <span id="instagram-bio"></span></p>
+                    <p><strong>Follower:</strong> <span id="instagram-followers"></span></p>
+                    <p><strong>Following:</strong> <span id="instagram-following"></span></p>
+                    <p><strong>Immagine Profilo:</strong> <span id="instagram-profile-picture"></span></p> {# Placeholder per immagine profilo #}
+                </div>
             </div>
-            <div>
-                <label for="twitter_api_secret_key">API Secret Key Twitter:</label><br>
-                <input type="text" id="twitter_api_secret_key" name="twitter_api_secret_key" value="{{ twitter_config.twitter_api_secret_key or '' }}" required> <span class="error-message hidden" id="twitter_api_secret_key_error">Campo obbligatorio</span>
+
+            <div id="twitter-profile-info" class="profile-info">
+                <h3>Profilo Twitter</h3>
+                <div id="twitter-profile-details" class="profile-details">
+                    <p><strong>Username:</strong> <span id="twitter-username"></span></p>
+                    <p><strong>Nome:</strong> <span id="twitter-name"></span></p>
+                    <p><strong>Bio:</strong> <span id="twitter-bio"></span></p>
+                    <p><strong>Follower:</strong> <span id="twitter-followers"></span></p>
+                    <p><strong>Following:</strong> <span id="twitter-following"></span></p>
+                    <p><strong>Immagine Profilo:</strong> <span id="twitter-profile-picture"></span></p> {# Placeholder per immagine profilo #}
+                </div>
             </div>
-            <div>
-                <label for="twitter_access_token">Access Token Twitter:</label><br>
-                <input type="text" id="twitter_access_token" name="twitter_access_token" value="{{ twitter_config.twitter_access_token or '' }}" required> <span class="error-message hidden" id="twitter_access_token_error">Campo obbligatorio</span>
-            </div>
-            <div>
-                <label for="twitter_access_token_secret">Access Token Secret Twitter:</label><br>
-                <textarea id="twitter_access_token_secret" name="twitter_access_token_secret" required>{{ twitter_config.twitter_access_token_secret or '' }}</textarea> <span class="error-message hidden" id="twitter_access_token_secret_error">Campo obbligatorio</span>
-            </div>
-            <br>
-            <button type="submit">Salva Configurazione Twitter</button>
-            <button type="button" id="test-connection-twitter">Test Connessione Twitter</button> <span id="connection-status-twitter"></span>
-        </form>
-        <div id="twitter-connection-result"></div> {# Area per mostrare risultato test connessione Twitter #}
-    </div>
+        </div>
+
+
+    </div> {# Fine div.content #}
+
 
     <script>
-        function validateInstagramConfig() {
-            let isValid = true;
-            const app_id = document.getElementById('instagram_app_id');
-            const app_secret = document.getElementById('instagram_app_secret');
-            const page_access_token = document.getElementById('instagram_page_access_token');
+        // JavaScript (mantenuto INLINE per ora - potremmo spostarlo in file esterno)
 
-            if (!app_id.value.trim()) {
-                document.getElementById('instagram_app_id_error').classList.remove('hidden');
-                isValid = false;
-            } else {
-                document.getElementById('instagram_app_id_error').classList.add('hidden');
-            }
-            if (!app_secret.value.trim()) {
-                document.getElementById('instagram_app_secret_error').classList.remove('hidden');
-                isValid = false;
-            } else {
-                document.getElementById('instagram_app_secret_error').classList.add('hidden');
-            }
-            if (!page_access_token.value.trim()) {
-                document.getElementById('instagram_page_access_token_error').classList.remove('hidden');
-                isValid = false;
-            } else {
-                document.getElementById('instagram_page_access_token_error').classList.add('hidden');
-            }
-            return isValid;
-        }
-
-        function validateTwitterConfig() {
-            let isValid = true;
-            const api_key = document.getElementById('twitter_api_key');
-            const api_secret_key = document.getElementById('twitter_api_secret_key');
-            const access_token = document.getElementById('twitter_access_token');
-            const access_token_secret = document.getElementById('twitter_access_token_secret');
-
-            if (!api_key.value.trim()) {
-                document.getElementById('twitter_api_key_error').classList.remove('hidden');
-                isValid = false;
-            } else {
-                document.getElementById('twitter_api_key_error').classList.add('hidden');
-            }
-            if (!api_secret_key.value.trim()) {
-                document.getElementById('twitter_api_secret_key_error').classList.remove('hidden');
-                isValid = false;
-            } else {
-                document.getElementById('twitter_api_secret_key_error').classList.add('hidden');
-            }
-            if (!access_token.value.trim()) {
-                document.getElementById('twitter_access_token_error').classList.remove('hidden');
-                isValid = false;
-            } else {
-                document.getElementById('twitter_access_token_error').classList.add('hidden');
-            }
-            if (!access_token_secret.value.trim()) {
-                document.getElementById('twitter_access_token_secret_error').classList.remove('hidden');
-                isValid = false;
-            } else {
-                document.getElementById('twitter_access_token_secret_error').classList.add('hidden');
-            }
-            return isValid;
-        }
-
-        async function testInstagramConnection() {
-            const statusSpan = document.getElementById('connection-status-instagram');
-            const resultDiv = document.getElementById('instagram-connection-result');
-            statusSpan.textContent = "Test in corso...";
-            resultDiv.innerHTML = ""; // Pulisce risultati precedenti
-
-            const app_id = document.getElementById('instagram_app_id').value;
-            const app_secret = document.getElementById('instagram_app_secret').value;
-            const page_access_token = document.getElementById('instagram_page_access_token').value;
-            const instagram_business_account_id = document.getElementById('instagram_business_account_id').value;
-
-            const response = await fetch('/test_instagram_connection', {  // Chiamata API Flask
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    app_id: app_id,
-                    app_secret: app_secret,
-                    page_access_token: page_access_token,
-                    instagram_business_account_id: instagram_business_account_id
-                })
-            });
-
-            statusSpan.textContent = ""; // Pulisce "Test in corso..."
-            const data = await response.json();
-            if (response.ok && data.success) {
-                resultDiv.innerHTML = `<div class="connection-status-success">Connessione a Instagram Riuscita! <br> Username: ${data.username || 'N/A'}, Biografia: ${data.biography || 'N/A'}, Follower: ${data.followers_count || 'N/A'}, Following: ${data.follows_count || 'N/A'}</div>`;
-            } else {
-                resultDiv.innerHTML = `<div class="connection-status-error">Errore di Connessione a Instagram: ${data.error || 'Sconosciuto'}</div>`;
-            }
-        }
-
-        async function testTwitterConnection() {
-            const statusSpan = document.getElementById('connection-status-twitter');
-            const resultDiv = document.getElementById('twitter-connection-result');
-            statusSpan.textContent = "Test in corso...";
-            resultDiv.innerHTML = ""; // Pulisce risultati precedenti
-
-            const api_key = document.getElementById('twitter_api_key').value;
-            const api_secret_key = document.getElementById('twitter_api_secret_key').value;
-            const access_token = document.getElementById('twitter_access_token').value;
-            const access_token_secret = document.getElementById('twitter_access_token_secret').value;
-
-            const response = await fetch('/test_twitter_connection', {  // Chiamata API Flask
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    api_key: api_key,
-                    api_secret_key: api_secret_key,
-                    access_token: access_token,
-                    access_token_secret: access_token_secret
-                })
-            });
-
-            statusSpan.textContent = ""; // Pulisce "Test in corso..."
-            const data = await response.json();
-            if (response.ok && data.success) {
-                resultDiv.innerHTML = `<div class="connection-status-success">Connessione a Twitter Riuscita! Utente: @${data.username}</div>`;
-            } else {
-                resultDiv.innerHTML = `<div class="connection-status-error">Errore di Connessione a Twitter: ${data.error || 'Sconosciuto'}</div>`;
-            }
-        }
-
+        // ... (Funzioni validateInstagramConfig(), validateTwitterConfig(), testInstagramConnection(), testTwitterConnection() - INALTERATE - mantieni codice esistente) ...
 
         document.getElementById('test-connection-instagram').addEventListener('click', testInstagramConnection);
         document.getElementById('test-connection-twitter').addEventListener('click', testTwitterConnection);
+
+        // Gestione Navigazione Sidebar (Mostra/Nascondi Sezioni)
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarLinks = document.querySelectorAll('.sidebar a');
+            const contentSections = document.querySelectorAll('.content > div'); // Seleziona le sezioni dentro .content
+
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent default link behavior (page reload)
+
+                    const targetSectionId = this.getAttribute('href').substring(1); // Rimuove '#'
+                    // Nascondi tutte le sezioni
+                    contentSections.forEach(section => {
+                        section.classList.add('hidden');
+                    });
+                    // Mostra solo la sezione target
+                    const targetSection = document.getElementById(targetSectionId);
+                    if (targetSection) {
+                        targetSection.classList.remove('hidden');
+                    }
+
+                    // Aggiorna classe 'active' nei link sidebar
+                    sidebarLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Mostra sezione "Configurazione" di default all'avvio
+            document.getElementById('config-section').classList.remove('hidden');
+            document.querySelector('.sidebar a[href="/"]').classList.add('active'); // Attiva link "Configurazione"
+        });
+
 
     </script>
 

@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, get
 import yaml
 import os
 from integrations.instagram.instagram_api import test_instagram_connection as instagram_test_conn
-from integrations.twitter.twitter_api import test_twitter_connection as twitter_test_conn # Importa funzione test twitter
+from integrations.twitter.twitter_api import test_twitter_connection as twitter_test_conn
 
 app = Flask(__name__)
 app.secret_key = "super segreto"
@@ -22,7 +22,7 @@ def save_config(config_data):
     with open(CONFIG_FILE_PATH, 'w') as file:
         yaml.dump(config_data, file, indent=2)
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST']) # Route per Configurazione (pagina principale)
 def config_page():
     config = load_config()
     instagram_config = config.get('instagram', {})
@@ -53,24 +53,51 @@ def config_page():
     return render_template('config.html', instagram_config=instagram_config, twitter_config=twitter_config, messages=get_flashed_messages(with_categories=True))
 
 
+@app.route('/profiles') # NUOVA ROUTE per Profili Social
+def profiles_page():
+    """Route per la pagina dei Profili Social (per ora dati SIMULATI)."""
+    # Dati profilo Instagram SIMULATI (da sostituire con dati veri API in futuro)
+    instagram_profile_data = {
+        'username': 'instagram_username_simulato',
+        'biography': 'Biografia di test di Instagram',
+        'followers_count': 1234,
+        'following_count': 567,
+        'profile_picture_url': 'URL_IMMAGINE_PROFILO_INSTAGRAM_SIMULATO' # Potremmo usare URL immagine placeholder
+    }
+    # Dati profilo Twitter SIMULATI (da sostituire con dati veri API in futuro)
+    twitter_profile_data = {
+        'username': 'TwitterUsernameSimulato',
+        'name': 'Nome Utente Twitter Simulato',
+        'bio': 'Bio di test di Twitter',
+        'followers_count': 987,
+        'following_count': 654,
+        'profile_picture_url': 'URL_IMMAGINE_PROFILO_TWITTER_SIMULATO' # Potremmo usare URL immagine placeholder
+    }
+
+    return render_template('config.html', # Rende lo stesso template config.html
+                           show_profiles_section=True, # Passa flag per mostrare sezione profili
+                           instagram_profile=instagram_profile_data, # Passa dati profilo Instagram
+                           twitter_profile=twitter_profile_data) # Passa dati profilo Twitter
+
+
 @app.route('/test_instagram_connection', methods=['POST'])
 def test_instagram_connection_route():
     config_data = request.get_json()
-    success, result = instagram_test_conn(config_data) # Chiama funzione test da integrations/instagram/instagram_api.py
+    success, result = instagram_test_conn(config_data)
     if success:
         return jsonify({'success': True, 'username': result.get('username'), 'biography': result.get('biography'), 'followers_count': result.get('followers_count'), 'follows_count': result.get('follows_count')}), 200
     else:
-        return jsonify({'success': False, 'error': result}), 400  # Restituisce errore 400 e messaggio
+        return jsonify({'success': False, 'error': result}), 400
 
 
 @app.route('/test_twitter_connection', methods=['POST'])
 def test_twitter_connection_route():
     config_data = request.get_json()
-    success, result_message = twitter_test_conn(config_data) # Chiama funzione test da integrations/twitter/twitter_api.py
+    success, result_message = twitter_test_conn(config_data)
     if success:
-        return jsonify({'success': True, 'username': result_message}), 200 # Restituisce username se successo
+        return jsonify({'success': True, 'username': result_message}), 200
     else:
-        return jsonify({'success': False, 'error': result_message}), 400 # Restituisce errore 400 e messaggio
+        return jsonify({'success': False, 'error': result_message}), 400
 
 
 if __name__ == '__main__':
