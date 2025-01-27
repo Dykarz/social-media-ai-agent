@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Configurazione Social Media AI Agent</title>
+</head>
+<body>
+    <h1>Configurazione Instagram</h1>
+    <form method="POST">
+        <div>
+            <label for="instagram_app_id">App ID Facebook:</label><br>
+            <input type="text" id="instagram_app_id" name="instagram_app_id" value="{{ instagram_config.app_id or '' }}"><br>
+        </div>
+        <div>
+            <label for="instagram_app_secret">App Secret Facebook:</label><br>
+            <input type="text" id="instagram_app_secret" name="instagram_app_secret" value="{{ instagram_config.app_secret or '' }}"><br>
+        </div>
+        <div>
+            <label for="instagram_page_access_token">Page Access Token Instagram:</label><br>
+            <textarea id="instagram_page_access_token" name="instagram_page_access_token">{{ instagram_config.page_access_token or '' }}</textarea><br>
+        </div>
+        <div>
+            <label for="instagram_business_account_id">Instagram Business Account ID (opzionale):</label><br>
+            <input type="text" id="instagram_business_account_id" name="instagram_business_account_id" value="{{ instagram_config.instagram_business_account_id or '' }}"><br>
+        </div>
+        <br>
+        <button type="submit">Salva Configurazione Instagram</button>
+    </form>
+</body>
+</html>
